@@ -1,0 +1,10 @@
+{
+  "name": "gta6-clipper",
+  "version": "0.1.0",
+  "description": "Turn GTA 6 stream VODs into checked 9:16 clips: chat and loudness signals, Claude picks, facecam split, word captions, Rockstar/platform/campaign checks.",
+  "author": { "name": "jutsuhq", "url": "https://github.com/jutsuhq" },
+  "homepage": "https://github.com/jutsuhq/gta6-stream-clipper",
+  "repository": "https://github.com/jutsuhq/gta6-stream-clipper",
+  "license": "MIT",
+  "keywords": ["gta6", "gta-6", "clipping", "stream-clips", "shorts", "tiktok", "twitch", "youtube", "vod", "subtitles"]
+}

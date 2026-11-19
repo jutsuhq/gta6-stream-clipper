@@ -1,0 +1,14 @@
+{
+  "_comment": "Example only. Copy the real rules from the campaign page.",
+  "name": "Example GTA 6 stream clipping campaign",
+  "paid": true,
+  "platforms": ["tiktok", "youtube_shorts", "instagram_reels"],
+  "min_seconds": 15,
+  "max_seconds": 60,
+  "required_hashtags": ["#gta6"],
+  "required_mentions": [],
+  "banned_words": [],
+  "allowed_creators": [],
+  "allow_spoilers": false,
+  "notes": "Views counted for 7 days after posting. One clip per moment."
+}
