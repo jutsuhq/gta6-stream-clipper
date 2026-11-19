@@ -36,10 +36,12 @@ One work folder per VOD. Every step writes files there, so you can stop and resu
 | `prepare` | yt-dlp reads metadata, the replay heatmap and the YouTube live chat replay; downloads audio only; measures loudness per second | `state.json`, `chat.json`, `loudness.npy` |
 | `signals` | Scores every second from chat speed (weighted by hype words like LMAO, KEKW, W), loudness spikes and the heatmap, all as robust z-scores; picks the top windows with a minimum gap | `candidates.json` |
 | `transcribe` | faster-whisper on the candidate windows only, with word timestamps | `candidates.md` |
+| `scout` | Optional. yt-dlp lists channels, Shorts, Twitch clips or TikTok profiles; ranks each entry by views against its own channel's median and by views per hour; downloads the top thumbnails for Claude to study | `scout/<date>/scout.md`, `outliers.csv`, `thumbs/` |
 | pick | Claude reads `candidates.md` and the rubric, then writes tight start and end times, a hook, a title, the clip `kind` and a spoiler flag | `picks.json` |
 | `render` | Pulls only the needed seconds of video from the source, finds the facecam with a face detector, stacks cam over gameplay (or uses a blurred background), burns word captions and the hook, normalises audio to -14 LUFS | `out/<id>.mp4`, `out/<id>_sheet.jpg`, `out/<id>.md` |
-| review | Claude looks at each 12-frame contact sheet and re-renders a clip with fixes if the crop or captions are wrong | |
-| `check` | Format, length, loudness, cutscene and in-game TV clips, spoilers, required hashtags and mentions, banned words, allowed streamers, credit, commercial-use warning | `check.md`, exit code 1 on any FAIL |
+| look | Claude looks at each 12-frame contact sheet and re-renders a clip with fixes if the crop or captions are wrong | |
+| `review` | Writes a brief per clip for a fresh subagent that has not seen the work: first frame, hook, crop, ending, policy, compared with the scout thumbnails; records its yes or no and appends every fault to `lessons.md` for the next VOD | `review/<id>.md`, `review.json`, `lessons.md` |
+| `check` | Fresh-eyes verdict, format, length, loudness, cutscene and in-game TV clips, spoilers, required hashtags and mentions, banned words, allowed streamers, credit, commercial-use warning | `check.md`, exit code 1 on any FAIL |
 
 The skill never uploads anything. You post the clips yourself.
 

@@ -27,6 +27,7 @@ import argparse
 import importlib.util
 import shutil
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -49,6 +50,15 @@ def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="clip.py", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("doctor", help="check ffmpeg, Python packages and font")
+
+    p = sub.add_parser("scout", help="rank channel or clip listings by views against their median and views per hour")
+    p.add_argument("sources", nargs="+", help="channel /videos or /shorts, Twitch /clips, TikTok @user, any yt-dlp list")
+    p.add_argument("--limit", type=int, default=30, help="entries read per source")
+    p.add_argument("--rank", choices=["ratio", "vph"], default="ratio")
+    p.add_argument("--min-ratio", type=float, default=3.0, help="keep entries at least this many times the median")
+    p.add_argument("--top", type=int, default=30)
+    p.add_argument("--thumbs", type=int, default=12, help="download thumbnails of the top N")
+    p.add_argument("--out", default=f"scout/{time.strftime('%Y-%m-%d')}")
 
     p = sub.add_parser("prepare", help="metadata, audio, chat and loudness for a VOD URL or local file")
     p.add_argument("source")
@@ -86,6 +96,16 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--preset", default="veryfast")
     p.add_argument("--no-captions", action="store_true")
 
+    p = sub.add_parser("review", help="write fresh-eyes review briefs, or record a reviewer's verdict")
+    p.add_argument("work")
+    p.add_argument("--ids", help="only these clip ids, comma separated")
+    p.add_argument("--refs", help="folder of reference thumbnails, e.g. scout/<date>/thumbs")
+    p.add_argument("--max-refs", type=int, default=6)
+    p.add_argument("--max-lessons", type=int, default=20, help="last lessons.md lines to include")
+    p.add_argument("--record", metavar="ID", help="store a verdict for this clip id")
+    p.add_argument("--verdict", choices=["yes", "no"])
+    p.add_argument("--faults", help="faults for a 'no', separated by ';'")
+
     p = sub.add_parser("check", help="check rendered clips; exit 1 on any FAIL")
     p.add_argument("work")
     p.add_argument("--campaign")
@@ -96,8 +116,8 @@ def main(argv=None):
     args = build_parser().parse_args(argv)
     if args.cmd == "doctor":
         return cmd_doctor(args)
-    from clipper import checks, prepare, render, signals, transcribe
-    {"prepare": prepare.cmd_prepare, "signals": signals.cmd_signals, "transcribe": transcribe.cmd_transcribe,
+    from clipper import checks, prepare, render, review, scout, signals, transcribe
+    {"scout": scout.cmd_scout, "review": review.cmd_review, "prepare": prepare.cmd_prepare, "signals": signals.cmd_signals, "transcribe": transcribe.cmd_transcribe,
      "render": render.cmd_render, "check": checks.cmd_check}[args.cmd](args)
 
 

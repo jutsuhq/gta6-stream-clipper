@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "skills" / "gta6-clipper" / "scripts"))
-from clipper import captions, chat, checks, common, facecam, signals  # noqa: E402
+from clipper import captions, chat, checks, common, facecam, review, scout, signals  # noqa: E402
 
 
 def test_parse_ts():
@@ -105,5 +105,49 @@ def test_run_checks_flags_rockstar_and_campaign_rules():
     assert res["required tags"] == "PASS"
     assert res["format"] == res["length"] == res["credit"] == "PASS"
 
-    ok = checks.run_checks(meta, {"title": "t", "kind": "chase"}, "https://example.com/v", "", {}, "x")
+    assert res["review"] == "WARN"
+
+    ok = checks.run_checks(meta, {"title": "t", "kind": "chase"}, "https://example.com/v", "", {}, "x",
+                           {"verdict": "yes"})
     assert not [r for r in ok if r[0] != "PASS"]
+
+
+def test_run_checks_fails_clip_the_reviewer_rejected():
+    meta = {"width": 1080, "height": 1920, "has_audio": True, "duration": 30, "source_url": "u"}
+    res = checks.run_checks(meta, {"kind": "chase"}, "u", "", {}, "x", {"verdict": "no", "faults": ["hook covers face"]})
+    assert ("FAIL", "review", "hook covers face") in res
+
+
+def test_scout_ratio_uses_each_sources_median_and_vph_needs_a_timestamp():
+    now = 1_000_000.0
+    entries = [{"id": str(i), "view_count": v, "title": f"t{i}", "url": f"u{i}"} for i, v in enumerate([100, 100, 120, 900])]
+    entries.append({"id": "x", "view_count": None})
+    entries[3]["timestamp"] = now - 3 * 3600
+    rows = scout.score_entries(entries, "chan", now)
+    assert len(rows) == 4 and rows[0]["median"] == 110
+    top = scout.rank(rows, "ratio", 3.0)
+    assert [r["title"] for r in top] == ["t3"] and top[0]["rank"] == 1 and top[0]["ratio"] == 8.18
+    assert [r["vph"] for r in scout.rank(rows, "vph", 3.0)] == [300]
+
+
+def test_scout_thumb_falls_back_to_youtube_and_prefers_largest():
+    assert scout.thumb_url({"id": "abc", "ie_key": "Youtube"}) == "https://i.ytimg.com/vi/abc/hqdefault.jpg"
+    big = {"thumbnails": [{"url": "s", "width": 10, "height": 10}, {"url": "b", "width": 99, "height": 99}]}
+    assert scout.thumb_url(big) == "b" and scout.thumb_url({"id": "t"}) == ""
+
+
+def test_review_record_keeps_rounds_and_appends_lessons(tmp_path):
+    work = tmp_path / "vod1"
+    (work / "out").mkdir(parents=True)
+    (work / "out" / "c1.json").write_text("{}")
+    review.record(work, "c1", "no", review.parse_faults("hook covers face; ends late\n"))
+    e = review.record(work, "c1", "yes", [])
+    assert e["round"] == 2 and common.load_json(work / "review.json")["c1"]["verdict"] == "yes"
+    assert (tmp_path / "lessons.md").read_text().splitlines() == ["- hook covers face (vod1/c1)", "- ends late (vod1/c1)"]
+
+
+def test_review_brief_points_at_sheet_refs_and_lessons(tmp_path):
+    pick = {"id": "c1", "cut_start": 10.0, "cut_end": 32.5, "hook": "He jumped it", "title": "Jump"}
+    text = review.brief(pick, tmp_path / "c1_sheet.jpg", "post body", [str(tmp_path / "01.jpg")], "- ends late")
+    assert "22.5 s" in text and "c1_sheet.jpg" in text and "01.jpg" in text and "- ends late" in text
+    assert text.rstrip().endswith("not \"hook could be better\".")

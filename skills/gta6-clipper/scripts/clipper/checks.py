@@ -10,7 +10,8 @@ from .common import H, W, die, load_campaign, load_json, load_transcripts, need,
 from .media import ffprobe, measure_lufs, video_stream
 
 
-def run_checks(meta: dict, pick: dict, post: str, transcript: str, campaign: dict, uploader: str):
+def run_checks(meta: dict, pick: dict, post: str, transcript: str, campaign: dict, uploader: str,
+               review: dict | None = None):
     out = []
 
     def add(ok, rule, detail, bad="FAIL"):
@@ -52,6 +53,11 @@ def run_checks(meta: dict, pick: dict, post: str, transcript: str, campaign: dic
         add(uploader.lower() in allowed, "allowed creator", f"source by {uploader!r}")
     add(bool(meta.get("source_url")) and meta["source_url"] in post, "credit", "source link in post text",
         bad="WARN")
+    if review is None:
+        out.append(("WARN", "review", "no fresh-eyes review yet; run `review`"))
+    else:
+        add(review.get("verdict") == "yes", "review",
+            "fresh reviewer said yes" if review.get("verdict") == "yes" else "; ".join(review.get("faults") or ["no"]))
     return out
 
 
@@ -84,6 +90,7 @@ def cmd_check(args):
     state = load_json(work / "state.json")
     campaign = load_campaign(args.campaign)
     transcripts = load_transcripts(work)
+    reviews = load_json(work / "review.json", {})
     rows = []
     for meta_path in sorted((work / "out").glob("*.json")):
         video, post_path = meta_path.with_suffix(".mp4"), meta_path.with_suffix(".md")
@@ -93,7 +100,8 @@ def cmd_check(args):
         post = post_path.read_text(encoding="utf-8") if post_path.exists() else ""
         said = " ".join(w["w"] for w in words_in(transcripts, pick["cut_start"], pick["cut_end"]))
         meta = probe_clip(video, state.get("url") or state.get("path"))
-        rows.append((pick["id"], pick["title"], run_checks(meta, pick, post, said, campaign, state.get("uploader", ""))))
+        rows.append((pick["id"], pick["title"], run_checks(meta, pick, post, said, campaign, state.get("uploader", ""),
+                                                     reviews.get(pick["id"]))))
     if not rows:
         die("no rendered clips in out/; run `render` first")
     text = report(campaign, rows)

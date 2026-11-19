@@ -12,6 +12,9 @@ uv run -q "$C" signals w --top 2
 echo '[{"id":"c01","start":140,"end":165,"title":"Smoke","hook":"Smoke test hook","kind":"chase","spoiler":false}]' > w/picks.json
 echo '{"name":"Smoke","min_seconds":15,"max_seconds":60,"required_hashtags":["#gta6"]}' > camp.json
 uv run -q "$C" render w --campaign camp.json --layout blur
+uv run -q "$C" review w
+test -s w/review/c01.md
+uv run -q "$C" review w --record c01 --verdict yes
 uv run -q "$C" check w --campaign camp.json
 test -s w/out/c01.mp4 && test -s w/out/c01_sheet.jpg
 echo "smoke ok"
