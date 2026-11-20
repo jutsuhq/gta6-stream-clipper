@@ -1,5 +1,7 @@
 # GTA 6 stream clipper
 
+![GTA 6 stream clipper: a stream VOD timeline cut into vertical clips with facecam and word-by-word captions](assets/cover.jpg)
+
 A Claude Code skill that turns a GTA 6 stream VOD into vertical 9:16 clips for TikTok, YouTube Shorts and Instagram Reels, and checks every clip against the rules it has to survive: Rockstar's video policy, the platform's reused-content rules and your clipping campaign.
 
 You give Claude a VOD link. It finds the moments chat reacted to, transcribes only those minutes, picks the clips and writes the hooks itself, renders 1080x1920 video with a facecam split and word-by-word captions, then tells you which clips pass, which need a second look and which must not be posted.
