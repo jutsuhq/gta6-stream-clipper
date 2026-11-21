@@ -84,6 +84,14 @@ def report(campaign: dict, rows) -> str:
     return "\n".join(lines)
 
 
+def clip_metas(work: Path, ids: str | None = None) -> list[Path]:
+    """Rendered clip metadata for the current picks (or the given ids), skipping stale renders."""
+    keep = {p["id"] for p in load_json(work / "picks.json", []) if isinstance(p, dict) and "id" in p}
+    if ids:
+        keep = set(ids.split(","))
+    return [m for m in sorted((work / "out").glob("*.json")) if not keep or m.stem in keep]
+
+
 def cmd_check(args):
     need("ffprobe")
     work = work_dir(args.work)
@@ -92,7 +100,7 @@ def cmd_check(args):
     transcripts = load_transcripts(work)
     reviews = load_json(work / "review.json", {})
     rows = []
-    for meta_path in sorted((work / "out").glob("*.json")):
+    for meta_path in clip_metas(work, args.ids):
         video, post_path = meta_path.with_suffix(".mp4"), meta_path.with_suffix(".md")
         if not video.exists():
             continue

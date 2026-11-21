@@ -60,7 +60,7 @@ The first run installs Python packages into uv's cache (a few hundred MB, mostly
    ```
    On a no, fix the faults, re-render with `--ids <id>`, and review again with a new subagent. Faults go to `lessons.md` next to the work folder; later briefs include them, so read it before picking clips for the next VOD.
 
-11. **Check**: `uv run SKILL_DIR/scripts/clip.py check <work> [--campaign c.json]`. It writes `<work>/check.md` and exits 1 on any FAIL, including a clip the reviewer said no to. Never tell the user a FAIL clip is ready. Explain each WARN in one line, especially the commercial-use warning for paid campaigns (see `SKILL_DIR/references/rules.md`).
+11. **Check**: `uv run SKILL_DIR/scripts/clip.py check <work> [--campaign c.json] [--ids c01,c03]`. It checks the clips in picks.json, writes `<work>/check.md` and exits 1 on any FAIL, including a clip the reviewer said no to. Never tell the user a FAIL clip is ready. Explain each WARN in one line, especially the commercial-use warning for paid campaigns (see `SKILL_DIR/references/rules.md`).
 
 12. **Hand over**: list each clip with its video path, `post.md` (title, caption, hashtags, streamer credit) and check result. Do not upload anything; the user posts the clips themselves.
 

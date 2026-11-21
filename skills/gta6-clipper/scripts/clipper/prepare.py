@@ -27,8 +27,11 @@ def prepare_url(url: str, args) -> tuple[Path, dict]:
         log("downloading audio only ...")
         ydl({"format": AUDIO_FORMAT, "outtmpl": str(work / "audio.%(ext)s")}).download([url])
     audio = next(p for p in work.glob("audio.*") if p.suffix != ".part")
-    if not args.chat and not args.no_chat and "live_chat" in (info.get("subtitles") or {}):
-        args.chat = str(download_chat(url, work))
+    if not args.chat and not args.no_chat:
+        if "live_chat" in (info.get("subtitles") or {}):
+            args.chat = str(download_chat(url, work))
+        else:
+            log("no chat replay on this VOD; candidates will rank on loudness and heatmap only")
     return work, {"url": info.get("webpage_url") or url, "id": vid, "title": info.get("title", ""),
                   "uploader": info.get("uploader") or info.get("channel") or "",
                   "duration": float(info.get("duration") or 0), "heatmap": info.get("heatmap") or [],

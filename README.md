@@ -4,6 +4,10 @@
 
 A Claude Code skill that turns a GTA 6 stream VOD into vertical 9:16 clips for TikTok, YouTube Shorts and Instagram Reels, and checks every clip against the rules it has to survive: Rockstar's video policy, the platform's reused-content rules and your clipping campaign.
 
+<p align="center"><img src="assets/demo.gif" width="270" alt="A 17-second vertical clip made by the skill: IShowSpeed's facecam stacked over GTA 6 gameplay of a bar band, with the hook 'Speed vs the GTA 6 bar band' and in-game subtitles"></p>
+
+<p align="center"><sub>Made by the skill from <a href="https://www.youtube.com/watch?v=qSyo5d-dVzA">IShowSpeed's GTA 6 stream</a>, facecam found automatically. All footage belongs to IShowSpeed and Rockstar Games.</sub></p>
+
 You give Claude a VOD link. It finds the moments chat reacted to, transcribes only those minutes, picks the clips and writes the hooks itself, renders 1080x1920 video with a facecam split and word-by-word captions, then tells you which clips pass, which need a second look and which must not be posted.
 
 ## Install

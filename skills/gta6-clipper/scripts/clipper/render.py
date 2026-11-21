@@ -93,7 +93,7 @@ def cmd_render(args):
 
     cam = None
     if args.layout in ("auto", "cam-top"):
-        cam = resolve_cam(args.cam, work, picks, *inputs[vi], size)
+        cam = resolve_cam(args.cam, work, picks, *inputs[vi], size, state.get("duration") or 0)
         log(f"facecam: {cam or 'not found'}")
     layout = args.layout if args.layout != "auto" else ("cam-top" if cam else "blur")
     if layout == "cam-top" and not cam:

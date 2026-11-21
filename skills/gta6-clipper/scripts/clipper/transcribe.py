@@ -52,6 +52,8 @@ def write_candidates_md(work: Path, state: dict, cands: list[dict]):
              f"Source: {state.get('url') or state.get('path')}  ",
              f"Streamer: {state.get('uploader') or 'unknown'} · length {fmt_ts(state['duration'])}", "",
              "Times are absolute seconds in the VOD. Pick with references/rubric.md and write picks.json.", ""]
+    if not load_json(work / "chat.json", []):
+        lines += ["No chat replay: peaks come from loudness and heatmap only, so check each one by ear.", ""]
     for c in cands:
         tr = load_json(work / "transcripts" / f"{c['id']}.json", {"segments": []})
         sig = ", ".join(f"{k} {v:+.1f}" for k, v in c["signals"].items())

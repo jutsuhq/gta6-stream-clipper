@@ -108,6 +108,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("check", help="check rendered clips; exit 1 on any FAIL")
     p.add_argument("work")
+    p.add_argument("--ids", help="only these clip ids, comma separated (default: every id in picks.json)")
     p.add_argument("--campaign")
     return ap
 

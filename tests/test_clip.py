@@ -91,6 +91,27 @@ def test_cam_box_keeps_aspect_and_frame():
     assert abs(w / h - common.W / common.CAM_H) < 0.02
 
 
+def test_cam_box_does_not_shrink_to_a_distant_face():
+    x, y, w, h = facecam.cam_box((189, 489, 20, 24), 1920, 1080)
+    assert w >= 0.2 * 1920 - 2
+    assert x <= 189 and x + w >= 209 and y <= 489 and y + h >= 513
+
+
+def test_facecam_samples_span_the_vod_not_just_one_pick():
+    times = facecam.sample_times([{"start": 21141, "end": 21158}], 84000)
+    assert min(times) < 84000 * 0.1 and max(times) > 84000 * 0.9
+    assert len(times) == 14
+
+
+def test_check_skips_renders_no_longer_in_picks(tmp_path):
+    (tmp_path / "out").mkdir()
+    for cid in ("c01", "c05", "c06"):
+        (tmp_path / "out" / f"{cid}.json").write_text("{}")
+    (tmp_path / "picks.json").write_text(json.dumps([{"id": "c01"}, {"id": "c05"}]))
+    assert [m.stem for m in checks.clip_metas(tmp_path)] == ["c01", "c05"]
+    assert [m.stem for m in checks.clip_metas(tmp_path, "c06")] == ["c06"]
+
+
 def test_run_checks_flags_rockstar_and_campaign_rules():
     meta = {"width": 1080, "height": 1920, "has_audio": True, "duration": 30, "lufs": -14.2,
             "source_url": "https://example.com/v"}

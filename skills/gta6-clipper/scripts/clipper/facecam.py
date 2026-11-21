@@ -32,9 +32,10 @@ def cluster_faces(dets: list[list[tuple]], fw: int, min_share: float = 0.5):
     return tuple(int(v) for v in np.median(arr, axis=0))
 
 
-def cam_box(face, fw: int, fh: int, aspect: float = W / CAM_H, scale: float = 3.2):
+def cam_box(face, fw: int, fh: int, aspect: float = W / CAM_H, scale: float = 3.2, min_share: float = 0.2):
     x, y, w, h = face
-    cw = min(fw, int(w * scale))
+    # A facecam overlay is rarely under a fifth of the frame wide, even when the streamer sits far back.
+    cw = min(fw, max(int(w * scale), int(fw * min_share)))
     ch = min(fh, int(cw / aspect))
     cw = int(ch * aspect)
     cx, cy = x + w / 2, y + h / 2
@@ -70,7 +71,19 @@ def detect_faces(src: str, headers: dict, times: list[float], fw: int):
     return cluster_faces(dets, fw) if dets else None
 
 
-def resolve_cam(arg: str, work: Path, picks: list[dict], src: str, headers: dict, size: tuple[int, int]):
+def sample_times(picks: list[dict], duration: float, spread: int = 12) -> list[float]:
+    """Frames to look for the facecam in: the picks plus points across the whole VOD.
+
+    The facecam sits still for the whole stream, while an in-game face only holds still for one scene,
+    so sampling a single pick can lock onto a cutscene character."""
+    times = [(p["start"] + p["end"]) / 2 for p in picks[:8]] + [p["start"] + 2 for p in picks[:8]]
+    if duration > 0:
+        times += [duration * (i + 0.5) / spread for i in range(spread)]
+    return times
+
+
+def resolve_cam(arg: str, work: Path, picks: list[dict], src: str, headers: dict, size: tuple[int, int],
+                duration: float = 0):
     if arg == "none":
         return None
     if arg != "auto":
@@ -79,8 +92,7 @@ def resolve_cam(arg: str, work: Path, picks: list[dict], src: str, headers: dict
     if cache.exists():
         return load_json(cache)["box"]
     fw, fh = size
-    times = [(p["start"] + p["end"]) / 2 for p in picks[:8]] + [p["start"] + 2 for p in picks[:8]]
-    face = detect_faces(src, headers, times, fw)
+    face = detect_faces(src, headers, sample_times(picks, duration), fw)
     cam = cam_box(face, fw, fh) if face else None
     save_json(cache, {"box": cam, "face": face, "source_size": [fw, fh]})
     return cam
